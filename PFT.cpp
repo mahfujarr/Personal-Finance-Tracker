@@ -8,9 +8,7 @@
 using namespace std;
 
 string dataPath = "data/data.csv";
-string settingsPath = "data/settings.csv";
 double initBal = 0.00;
-
 string currentTime()
 {
     time_t currentTime = time(0);
@@ -23,6 +21,7 @@ string currentTime()
 void welcome();
 void addEntry();
 void report();
+void clear();
 void mainMenu();
 
 int main()
@@ -30,7 +29,6 @@ int main()
     system("cls");
     welcome();
 }
-
 void welcome()
 {
     cout << "\033[1;36m========================================" << endl;
@@ -50,7 +48,6 @@ void welcome()
         cout << "\033[1;31mInvalid option. Try again with valid options.\033[0m" << endl;
         cout << "-->";
     }
-
     if (x == 1)
     {
         addEntry();
@@ -68,89 +65,135 @@ void welcome()
     }
     mainMenu();
 }
-
 void addEntry()
 {
+    ifstream fin(dataPath, ios::in);
     ofstream fout(dataPath, ios::app);
+    bool isEmpty = fin.peek() == ifstream::traits_type::eof();
     string date = currentTime(), description, category;
     double amount;
+    string month = date.substr(3, 2);
     system("cls");
+    string line, matchMonth;
+    getline(fin, line);
+    stringstream inputString(line);
+    getline(inputString, matchMonth);
     cout << "\033[1;36m========================================" << endl;
     cout << "=============Adding an Entry============" << endl;
     cout << "========================================\033[0m" << endl;
-    cout << "Current time: " << date << endl;
-    cout << "Give a description: ";
-    cin.ignore();
-    getline(cin, description);
-    do
+    if (isEmpty)
     {
-        cout << "Enter the cost: ";
-        if (cin >> amount)
+        string date = currentTime();
+        fout << date << ",Initial Entry,0.00,Initialization" << endl;
+        addEntry();
+    }
+    cout << "Current time: " << date << endl;
+    if (month == matchMonth.substr(3, 2))
+    {
+        cout << "Give a description: ";
+        cin.ignore();
+        getline(cin, description);
+        do
         {
-            if (amount >= 0)
+            cout << "Enter the cost: ";
+            if (cin >> amount)
             {
-                cin.ignore(1000, '\n');
-                break;
+                if (amount >= 0)
+                {
+                    cin.ignore(1000, '\n');
+                    break;
+                }
+                else
+                {
+                    cout << "\033[1;31mThe cost cannot be negative. Please try again.\033[0m" << endl;
+                }
             }
             else
             {
-                cout << "\033[1;31mThe cost cannot be negative. Please try again.\033[0m" << endl;
+                cin.clear();
+                cin.ignore(1000, '\n');
+                cout << "\033[1;31mInvalid input. Please enter a valid number for the cost.\033[0m" << endl;
             }
+        } while (true);
+        cout << "Select a category:" << endl;
+        cout << "1. Food" << endl;
+        cout << "2. Rent" << endl;
+        cout << "3. Utility" << endl;
+        cout << "4. Entertainment" << endl;
+        cout << "5. Transportation" << endl;
+        cout << "6. Custom" << endl;
+        cout << "-->";
+        int x;
+        while (!(cin >> x) || x < 1 || x > 6)
+        {
+            cin.ignore();
+            cout << "\033[1;31mInvalid input. Please select a valid category (1-6)\033[0m" << endl;
+            cout << "-->";
         }
-        else
+        cin.ignore();
+        switch (x)
+        {
+        case 1:
+            category = "Food";
+            break;
+        case 2:
+            category = "Rent";
+            break;
+        case 3:
+            category = "Utility";
+            break;
+        case 4:
+            category = "Entertainment";
+            break;
+        case 5:
+            category = "Transportation";
+            break;
+        case 6:
+            cout << "Enter custom category: ";
+            getline(cin, category);
+            break;
+        default:
+            break;
+        }
+        fout << date << "," << description << "," << amount << "," << category << endl;
+        fout.close();
+        system("cls");
+        cout << "\033[1;32mEntry added successfully!\033[0m" << endl;
+        mainMenu();
+    }
+    else
+    {
+        cout << "A new month has started." << endl;
+        cout << "What would you like to do?" << endl;
+        cout << "1. View the report for the previous month" << endl;
+        cout << "2. Clear the data for the previous month and start fresh" << endl;
+        cout << "--> ";
+        int choice;
+        while (!(cin >> choice) || (choice != 1 && choice != 2))
         {
             cin.clear();
-            cin.ignore(1000, '\n');
-            cout << "\033[1;31mInvalid input. Please enter a valid number for the cost.\033[0m" << endl;
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            cout << "\033[1;31mInvalid choice. Please select 1 or 2.\033[0m" << endl;
+            cout << "--> ";
         }
-    } while (true);
 
-    cout << "Select a category:" << endl;
-    cout << "1. Food" << endl;
-    cout << "2. Rent" << endl;
-    cout << "3. Utility" << endl;
-    cout << "4. Entertainment" << endl;
-    cout << "5. Transportation" << endl;
-    cout << "6. Custom" << endl;
-    cout << "-->";
-    int x;
-    while (!(cin >> x) || x < 1 || x > 6)
-    {
         cin.ignore();
-        cout << "\033[1;31mInvalid input. Please select a valid category (1-6)\033[0m" << endl;
-        cout << "-->";
-    }
-    cin.ignore();
-    switch (x)
-    {
-    case 1:
-        category = "Food";
-        break;
-    case 2:
-        category = "Rent";
-        break;
-    case 3:
-        category = "Utility";
-        break;
-    case 4:
-        category = "Entertainment";
-        break;
-    case 5:
-        category = "Transportation";
-        break;
-    case 6:
-        cout << "Enter custom category: ";
-        getline(cin, category);
-        break;
-    default:
-        break;
-    }
-    fout << date << "," << description << "," << amount << "," << category << endl;
-    fout.close();
-    system("cls");
-    cout << "\033[1;32mEntry added successfully!\033[0m" << endl;
-};
 
+        if (choice == 1)
+        {
+            report();
+        }
+        else if (choice == 2)
+        {
+            fin.close();
+            fout.close();
+            clear();
+            cout << "\033[1;32mData cleared successfully. You can now start adding entries for the new month.\033[0m" << endl;
+        }
+    }
+    fin.close();
+    fout.close();
+};
 void report()
 {
     system("cls");
@@ -158,6 +201,12 @@ void report()
     cout << "=================Report=================" << endl;
     cout << "========================================\033[0m" << endl;
     ifstream fin(dataPath, ios::in);
+    string linee, matchMonth;
+    getline(fin, linee);
+    stringstream inputString(linee);
+    getline(inputString, matchMonth);
+    string month = "Month-" + matchMonth.substr(3, 2);
+    cout << "----------------" + month + "----------------" << endl;
     string line, date, description, amount, category;
     double totalSpending = 0, f = 0, r = 0, u = 0, e = 0, t = 0, o = 0;
     while (getline(fin, line))
@@ -204,7 +253,6 @@ void report()
     cin.get();
     mainMenu();
 }
-
 void mainMenu()
 {
     cout << "Press any key to go to main Menu" << endl;
@@ -213,3 +261,23 @@ void mainMenu()
     system("cls");
     welcome();
 };
+void clear()
+{
+    string path = "data/month-" + currentTime().substr(3, 2) + ".csv";
+    if (rename(dataPath.c_str(), path.c_str()) != 0)
+    {
+        perror("Error renaming file");
+    }
+    else
+    {
+        cout << "\033[1;32mPrevious month's data archived as: " << path << "\033[0m" << endl;
+    }
+    ofstream newFile(dataPath, ios::out);
+    if (!newFile)
+    {
+        cout << "\033[1;31mError creating new CSV file for the current month.\033[0m" << endl;
+        return;
+    }
+    newFile.close();
+    cout << "\033[1;32mNew CSV file created for the current month.\033[0m" << endl;
+}
