@@ -7,8 +7,9 @@
 #include <Windows.h>
 using namespace std;
 
-string dataPath = "data/data.csv";
+string dataPath = "data.csv";
 double initBal = 0.00;
+
 string currentTime()
 {
     time_t currentTime = time(0);
@@ -176,7 +177,6 @@ void addEntry()
             cout << "\033[1;31mInvalid choice. Please select 1 or 2.\033[0m" << endl;
             cout << "--> ";
         }
-
         cin.ignore();
 
         if (choice == 1)
